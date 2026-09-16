@@ -1,4 +1,5 @@
-﻿using BookStoreApi.DTOs;
+﻿using BookStoreApi.Data;
+using BookStoreApi.DTOs;
 using BookStoreApi.Features.Books.Commands.CreateBook;
 using BookStoreApi.Features.Books.Commands.DeleteBook;
 using BookStoreApi.Features.Books.Commands.UpdateBook;
@@ -8,55 +9,44 @@ using BookStoreApi.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
+
 namespace BookStoreApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class BooksController : ControllerBase
 {
+    private readonly BookStoreDbContext _context;
     private readonly BookService _bookService;
     private readonly DapperBookService _dapperBookService;
     private readonly NHibernateBookService _nhibernateBookService;
     private readonly IMediator _mediator;
+
     public BooksController(
-    BookService bookService,
-    DapperBookService dapperBookService,
-    NHibernateBookService nhibernateBookService,
-     IMediator mediator)
+        BookService bookService,
+        DapperBookService dapperBookService,
+        NHibernateBookService nhibernateBookService,
+        BookStoreDbContext context,
+        IMediator mediator)
     {
         _bookService = bookService;
         _dapperBookService = dapperBookService;
         _nhibernateBookService = nhibernateBookService;
+        _context = context;
         _mediator = mediator;
     }
 
-    //[HttpGet]
-    //[Authorize(AuthenticationSchemes = "Bearer")]
-    //public async Task<ActionResult<IEnumerable<BookDto>>> GetBooks(
-    //  string? search,
-    //  int? categoryId,
-    //  decimal? minPrice,
-    //  decimal? maxPrice,
-    //  string? sort)
-    //{
-    //    var books = await _bookService.GetBooksAsync(
-    //        search,
-    //        categoryId,
-    //        minPrice,
-    //        maxPrice,
-    //        sort);
-
-    //    return Ok(books);
-    //}
-
+    [EnableRateLimiting("fixed")]
     [HttpGet]
     [Authorize(AuthenticationSchemes = "Bearer")]
     public async Task<ActionResult<IEnumerable<BookDto>>> GetBooks(
-      string? search,
-      int? categoryId,
-      decimal? minPrice,
-      decimal? maxPrice,
-      string? sort)
+        string? search,
+        int? categoryId,
+        decimal? minPrice,
+        decimal? maxPrice,
+        string? sort)
     {
         var query = new GetBooksQuery(
             search,
@@ -69,19 +59,6 @@ public class BooksController : ControllerBase
 
         return Ok(books);
     }
-
-    //[HttpGet("{id}")]
-    //public async Task<ActionResult<BookDto>> GetBook(int id)
-    //{
-    //    var book = await _bookService.GetBookByIdAsync(id);
-
-    //    if (book == null)
-    //    {
-    //        return NotFound();
-    //    }
-
-    //    return Ok(book);
-    //}
 
     [HttpGet("{id}")]
     public async Task<ActionResult<BookDto>> GetBook(int id)
@@ -98,25 +75,9 @@ public class BooksController : ControllerBase
         return Ok(book);
     }
 
-    //[HttpPost]
-    //public async Task<ActionResult<BookDto>> CreateBook(
-    // CreateBookDto dto)
-    //{
-    //    var result = await _bookService.CreateBookAsync(dto);
-
-    //    if (!result.Success)
-    //    {
-    //        return BadRequest(result.ErrorMessage);
-    //    }
-
-    //    return CreatedAtAction(
-    //        nameof(GetBook),
-    //        new { id = result.Data!.Id },
-    //        result.Data);
-    //}
     [HttpPost]
     public async Task<ActionResult<BookDto>> CreateBook(
-    CreateBookDto dto)
+        CreateBookDto dto)
     {
         var command = new CreateBookCommand(
             dto.Title,
@@ -131,30 +92,11 @@ public class BooksController : ControllerBase
             new { id = result.Id },
             result);
     }
-    //[HttpPut("{id}")]
-    //public async Task<ActionResult<BookDto>> UpdateBook(
-    // int id,
-    // UpdateBookDto dto)
-    //{
-    //    var result = await _bookService.UpdateBookAsync(id, dto);
-
-    //    if (result.NotFound)
-    //    {
-    //        return NotFound();
-    //    }
-
-    //    if (!result.Success)
-    //    {
-    //        return BadRequest(result.ErrorMessage);
-    //    }
-
-    //    return Ok(result.Data);
-    //}
 
     [HttpPut("{id}")]
     public async Task<ActionResult<BookDto>> UpdateBook(
-     int id,
-     UpdateBookDto dto)
+        int id,
+        UpdateBookDto dto)
     {
         var command = new UpdateBookCommand(
             id,
@@ -173,25 +115,10 @@ public class BooksController : ControllerBase
         return Ok(book);
     }
 
-    //[HttpDelete("{id}")]
-    //[Authorize(
-    // AuthenticationSchemes = "Bearer",
-    // Roles = "Admin")]
-    //public async Task<IActionResult> DeleteBook(int id)
-    //{
-    //    var deleted = await _bookService.DeleteBookAsync(id);
-
-    //    if (!deleted)
-    //    {
-    //        return NotFound();
-    //    }
-
-    //    return NoContent();
-    //}
     [HttpDelete("{id}")]
     [Authorize(
-     AuthenticationSchemes = "Bearer",
-     Roles = "Admin")]
+        AuthenticationSchemes = "Bearer",
+        Roles = "Admin")]
     public async Task<IActionResult> DeleteBook(int id)
     {
         var command = new DeleteBookCommand(id);
@@ -205,13 +132,14 @@ public class BooksController : ControllerBase
 
         return NoContent();
     }
+
     [HttpGet("dapper")]
     public async Task<ActionResult<IEnumerable<BookDto>>> GetBooksUsingDapper(
-     string? search,
-     int? categoryId,
-     decimal? minPrice,
-     decimal? maxPrice,
-     string? sort)
+        string? search,
+        int? categoryId,
+        decimal? minPrice,
+        decimal? maxPrice,
+        string? sort)
     {
         var books = await _dapperBookService.GetBooksAsync(
             search,

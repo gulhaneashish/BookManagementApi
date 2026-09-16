@@ -17,6 +17,12 @@ public class BookStoreDbContext : DbContext
 
     public DbSet<Category> Categories { get; set; }
     public DbSet<User> Users { get; set; }
+
+    public DbSet<ChatMessage> ChatMessages
+    {
+        get;
+        set;
+    }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Book>()
