@@ -6,30 +6,57 @@ obj/
 .vs/
 *.user
 *.suo
-
-# Rider
-.idea/
-
-# VS Code
-.vscode/
-
-# Logs
-logs/
-
-# User-specific files
-*.user
-*.rsuser
+*.userosscache
 *.sln.docstates
 
-# OS files
-.DS_Store
-Thumbs.db
+# Visual Studio Code
+.vscode/
 
-# Environment / secrets
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+
+# Test results
+TestResults/
+*.trx
+
+# Logs
+*.log
+
+# ASP.NET Core
+wwwroot/uploads/
+
+# Environment / local configuration
 .env
 .env.*
+!.env.example
+
+# User secrets
+secrets.json
 
 # Local database files
 *.db
 *.sqlite
 *.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
+# Coverage
+coverage/
+.coverage
+.coveragexml
+
+# Publish output
+publish/
