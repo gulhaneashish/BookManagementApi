@@ -60,3 +60,6 @@ coverage/
 
 # Publish output
 publish/
+
+appsettings.*.json
+!appsettings.json
