@@ -17,12 +17,35 @@ using Serilog;
 using System.Text;
 using YourProject.Hubs;
 
+Serilog.Debugging.SelfLog.Enable(message =>
+{
+    Console.WriteLine($"SERILOG ERROR: {message}");
+});
+
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "BookStoreApi")
     .WriteTo.Console()
     .WriteTo.File(
         "logs/bookstore-.log",
         rollingInterval: RollingInterval.Day)
+    .WriteTo.Elasticsearch(
+        new Serilog.Sinks.Elasticsearch.ElasticsearchSinkOptions(
+            new Uri("http://localhost:9200"))
+        {
+            AutoRegisterTemplate = true,
+            IndexFormat = "bookstore-logs-{0:yyyy.MM.dd}",
+
+            EmitEventFailure =
+                Serilog.Sinks.Elasticsearch.EmitEventFailureHandling.WriteToSelfLog,
+
+            FailureCallback = (logEvent, exception) =>
+            {
+                Console.WriteLine(
+                    $"ELASTICSEARCH FAILURE: {exception.Message}");
+            }
+        })
     .CreateLogger();
 
 
